@@ -5,6 +5,8 @@ class DJPanel {
     this.playlist = [];
     this.currentIndex = -1;
     this.isPlaying = false;
+    this.isAuthenticated = false;
+    this.user = null;
 
     this.channelList = document.getElementById('channelList');
     this.djChannelName = document.getElementById('djChannelName');
@@ -17,19 +19,84 @@ class DJPanel {
     this.djListenerCount = document.getElementById('djListenerCount');
     this.playlistCount = document.getElementById('playlistCount');
     this.playlistEl = document.getElementById('playlist');
+    this.userInfo = document.getElementById('userInfo');
+    this.userName = document.getElementById('userName');
+    this.userRoleBadge = document.getElementById('userRoleBadge');
+    this.userAvatar = document.getElementById('userAvatar');
+    this.logoutBtn = document.getElementById('logoutBtn');
+    this.loginRequired = document.getElementById('loginRequired');
+    this.mainContent = document.getElementById('mainContent');
+    this.navAdmin = document.getElementById('navAdmin');
+    this.navChannelMgr = document.getElementById('navChannelMgr');
 
     this.init();
   }
 
   async init() {
+    if (!await this.checkAuth()) {
+      this.showLoginRequired();
+      return;
+    }
+
+    this.showMainContent();
+    this.setupUserInfo();
+    this.setupNavigation();
     await this.loadChannels();
     this.bindEvents();
   }
 
+  async checkAuth() {
+    const token = localStorage.getItem('auth_token');
+    const storedUser = API.getCurrentUser();
+
+    if (!token || !storedUser) {
+      return false;
+    }
+
+    try {
+      const result = await API.auth.me();
+      this.user = result.user;
+      this.isAuthenticated = true;
+      return true;
+    } catch (e) {
+      API.clearAuth();
+      return false;
+    }
+  }
+
+  showLoginRequired() {
+    this.loginRequired.style.display = 'block';
+    this.mainContent.style.display = 'none';
+    this.userInfo.style.display = 'none';
+  }
+
+  showMainContent() {
+    this.loginRequired.style.display = 'none';
+    this.mainContent.style.display = 'flex';
+    this.userInfo.style.display = 'flex';
+  }
+
+  setupUserInfo() {
+    if (!this.user) return;
+
+    this.userName.textContent = this.user.name || this.user.username;
+    this.userRoleBadge.textContent = API.getRoleName(this.user.role);
+    this.userRoleBadge.className = `role-badge role-${this.user.role}`;
+    this.userAvatar.textContent = (this.user.name || this.user.username).charAt(0).toUpperCase();
+  }
+
+  setupNavigation() {
+    if (this.user.role === 'super_admin') {
+      this.navAdmin.style.display = 'inline-block';
+      this.navChannelMgr.style.display = 'inline-block';
+    } else if (this.user.role === 'channel_admin') {
+      this.navChannelMgr.style.display = 'inline-block';
+    }
+  }
+
   async loadChannels() {
     try {
-      const response = await fetch(`${CONFIG.API_BASE}/api/channels`);
-      const channels = await response.json();
+      const channels = await API.channels.list();
       this.renderChannels(channels);
     } catch (err) {
       console.error('Failed to load channels:', err);
@@ -37,7 +104,12 @@ class DJPanel {
   }
 
   renderChannels(channels) {
-    this.channelList.innerHTML = channels.map(ch => `
+    let filteredChannels = channels;
+    if (this.user.role === 'channel_admin' && this.user.managedChannels) {
+      filteredChannels = channels.filter(ch => this.user.managedChannels.includes(ch.id));
+    }
+
+    this.channelList.innerHTML = filteredChannels.map(ch => `
       <div class="channel-item ${this.currentChannel === ch.id ? 'active' : ''}" data-id="${ch.id}">
         <h3><span class="channel-status ${ch.isPlaying ? 'playing' : ''}"></span>${ch.name}</h3>
         <p>${ch.description}</p>
@@ -51,6 +123,10 @@ class DJPanel {
     this.channelList.querySelectorAll('.channel-item').forEach(item => {
       item.addEventListener('click', () => {
         const channelId = item.dataset.id;
+        if (this.user.role === 'channel_admin' && !API.canManageChannel(channelId)) {
+          alert('您无权管理该频道');
+          return;
+        }
         this.selectChannel(channelId);
       });
     });
@@ -70,12 +146,13 @@ class DJPanel {
   }
 
   connectWebSocket(channelId) {
+    const token = localStorage.getItem('auth_token');
     this.ws = new WebSocket(CONFIG.WS_URL);
 
     this.ws.onopen = () => {
       this.ws.send(JSON.stringify({
-        action: 'join',
-        channelId: channelId
+        action: 'authenticate',
+        token: token
       }));
     };
 
@@ -94,6 +171,20 @@ class DJPanel {
 
   handleWebSocketMessage(data) {
     switch (data.type) {
+      case 'authSuccess':
+        this.ws.send(JSON.stringify({
+          action: 'join',
+          channelId: this.currentChannel
+        }));
+        break;
+      case 'authError':
+        alert(data.error || '认证失败，请重新登录');
+        API.clearAuth();
+        window.location.href = 'login.html';
+        break;
+      case 'error':
+        alert(data.error);
+        break;
       case 'status':
         this.handleStatus(data);
         break;
@@ -108,6 +199,9 @@ class DJPanel {
         break;
       case 'volumeChange':
         this.handleVolumeChange(data);
+        break;
+      case 'playlistUpdated':
+        this.loadPlaylist(data.channelId);
         break;
     }
   }
@@ -189,8 +283,7 @@ class DJPanel {
 
   async loadPlaylist(channelId) {
     try {
-      const response = await fetch(`${CONFIG.API_BASE}/api/channels/${channelId}/playlist`);
-      const playlist = await response.json();
+      const playlist = await API.channels.getPlaylist(channelId);
       this.playlist = playlist;
       this.playlistCount.textContent = playlist.length;
       this.renderPlaylist();
@@ -260,6 +353,19 @@ class DJPanel {
     this.sendControl('volume', { volume: value / 100 });
   }
 
+  async logout() {
+    try {
+      await API.auth.logout();
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+    API.clearAuth();
+    if (this.ws) {
+      this.ws.close();
+    }
+    window.location.href = 'login.html';
+  }
+
   bindEvents() {
     this.playPauseBtn.addEventListener('click', () => {
       if (!this.currentChannel) return;
@@ -279,6 +385,12 @@ class DJPanel {
     this.channelVolume.addEventListener('input', (e) => {
       if (!this.currentChannel) return;
       this.setVolume(parseInt(e.target.value));
+    });
+
+    this.logoutBtn.addEventListener('click', () => {
+      if (confirm('确定要退出登录吗？')) {
+        this.logout();
+      }
     });
   }
 }

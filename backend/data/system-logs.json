@@ -1,0 +1,28 @@
+{
+  "logs": [
+    {
+      "id": "1781696208313-pp2ryvgop",
+      "timestamp": 1781696208313,
+      "type": "system",
+      "action": "服务启动",
+      "details": {},
+      "user": null
+    },
+    {
+      "id": "1781696215341-cd8ntphux",
+      "timestamp": 1781696215341,
+      "type": "system",
+      "action": "服务关闭",
+      "details": {},
+      "user": null
+    },
+    {
+      "id": "1781696229883-seyma34bq",
+      "timestamp": 1781696229883,
+      "type": "system",
+      "action": "服务启动",
+      "details": {},
+      "user": null
+    }
+  ]
+}

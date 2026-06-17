@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>系统管理 - DJ 控制台</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .admin-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .tab-btn {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      color: #6b7280;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: #374151;
+    }
+
+    .tab-btn.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+      font-weight: 600;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .admin-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+      font-size: 13px;
+    }
+
+    tr:hover {
+      background: #f9fafb;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 28px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #9ca3af;
+      line-height: 1;
+    }
+
+    .close-btn:hover {
+      color: #374151;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      max-height: 150px;
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .checkbox-item input {
+      width: auto;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .log-filters {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .log-filters select,
+    .log-filters input {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .log-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      font-family: monospace;
+      font-size: 13px;
+    }
+
+    .log-item:last-child {
+      border-bottom: none;
+    }
+
+    .log-time {
+      color: #6b7280;
+      margin-right: 12px;
+    }
+
+    .log-type {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-right: 12px;
+    }
+
+    .log-type-auth { background: #dbeafe; color: #1d4ed8; }
+    .log-type-user { background: #fef3c7; color: #b45309; }
+    .log-type-channel { background: #d1fae5; color: #047857; }
+    .log-type-playlist { background: #ede9fe; color: #6d28d9; }
+    .log-type-playback { background: #fce7f3; color: #be185d; }
+    .log-type-system { background: #f3f4f6; color: #374151; }
+
+    .log-action {
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .log-details {
+      color: #6b7280;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+
+    .permission-denied {
+      text-align: center;
+      padding: 100px 20px;
+      color: #999;
+    }
+
+    .permission-denied .icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .channel-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .channel-tag {
+      background: #e0e7ff;
+      color: #4338ca;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>⚙️ 系统管理</h1>
+      <nav>
+        <a href="index.html" class="nav-link">播放器</a>
+        <a href="dj.html" class="nav-link">DJ 控制台</a>
+        <a href="admin.html" class="nav-link active">系统管理</a>
+        <a href="channel-manager.html" class="nav-link">频道管理</a>
+      </nav>
+      <div class="user-info" id="userInfo" style="display: none;">
+        <div class="user-details">
+          <div class="user-name" id="userName">--</div>
+          <div class="user-role">
+            <span class="role-badge" id="userRoleBadge">--</span>
+          </div>
+        </div>
+        <div class="user-avatar" id="userAvatar">--</div>
+        <button class="logout-btn" id="logoutBtn">退出</button>
+      </div>
+    </header>
+
+    <div id="permissionDenied" class="permission-denied" style="display: none;">
+      <div class="icon">🚫</div>
+      <h2>权限不足</h2>
+      <p>您没有权限访问此页面</p>
+      <button onclick="window.location.href='dj.html'" class="btn btn-primary" style="margin-top: 20px;">返回控制台</button>
+    </div>
+
+    <div id="adminContent" style="display: none;">
+      <div class="admin-container">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="users">👥 用户管理</button>
+          <button class="tab-btn" data-tab="channels">📻 频道管理</button>
+          <button class="tab-btn" data-tab="logs">📋 系统日志</button>
+        </div>
+
+        <div id="users" class="tab-content active">
+          <div class="admin-card">
+            <div class="card-header">
+              <h2>用户列表</h2>
+              <button class="btn btn-primary" onclick="openUserModal()">+ 新增用户</button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>用户名</th>
+                  <th>姓名</th>
+                  <th>角色</th>
+                  <th>管理频道</th>
+                  <th>创建时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="channels" class="tab-content">
+          <div class="admin-card">
+            <div class="card-header">
+              <h2>频道列表</h2>
+              <button class="btn btn-primary" onclick="openChannelModal()">+ 新增频道</button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>名称</th>
+                  <th>描述</th>
+                  <th>状态</th>
+                  <th>在线人数</th>
+                  <th>歌曲数量</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="channelsTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="logs" class="tab-content">
+          <div class="admin-card">
+            <div class="card-header">
+              <h2>系统日志</h2>
+              <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary btn-sm" onclick="loadLogs()">刷新</button>
+                <button class="btn btn-danger btn-sm" onclick="clearLogs()">清空日志</button>
+              </div>
+            </div>
+            <div class="log-filters">
+              <select id="logTypeFilter" onchange="loadLogs()">
+                <option value="">全部类型</option>
+                <option value="auth">认证</option>
+                <option value="user">用户</option>
+                <option value="channel">频道</option>
+                <option value="playlist">播放列表</option>
+                <option value="playback">播放</option>
+                <option value="system">系统</option>
+              </select>
+              <input type="text" id="logUserFilter" placeholder="用户名" onchange="loadLogs()">
+            </div>
+            <div id="logsList" style="max-height: 600px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="userModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="userModalTitle">新增用户</h3>
+        <button class="close-btn" onclick="closeUserModal()">&times;</button>
+      </div>
+      <form id="userForm">
+        <input type="hidden" id="editUsername">
+        <div class="form-group">
+          <label>用户名</label>
+          <input type="text" id="username" required>
+        </div>
+        <div class="form-group">
+          <label>姓名</label>
+          <input type="text" id="name" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="password">
+          </div>
+          <div class="form-group">
+            <label>角色</label>
+            <select id="role" onchange="toggleManagedChannels()">
+              <option value="dj">普通DJ</option>
+              <option value="channel_admin">频道管理员</option>
+              <option value="super_admin">超级管理员</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" id="managedChannelsGroup" style="display: none;">
+          <label>管理频道</label>
+          <div class="checkbox-group" id="managedChannelsCheckboxes">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeUserModal()">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="channelModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="channelModalTitle">新增频道</h3>
+        <button class="close-btn" onclick="closeChannelModal()">&times;</button>
+      </div>
+      <form id="channelForm">
+        <input type="hidden" id="editChannelId">
+        <div class="form-group">
+          <label>频道ID</label>
+          <input type="text" id="channelId" required>
+        </div>
+        <div class="form-group">
+          <label>频道名称</label>
+          <input type="text" id="channelName" required>
+        </div>
+        <div class="form-group">
+          <label>描述</label>
+          <textarea id="channelDescription" rows="2"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>目录名</label>
+            <input type="text" id="channelDir" required>
+          </div>
+          <div class="form-group">
+            <label>比特率</label>
+            <input type="text" id="channelBitrate" value="128k" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>采样率</label>
+            <input type="number" id="channelSampleRate" value="44100" required>
+          </div>
+          <div class="form-group">
+            <label>默认音量</label>
+            <input type="number" id="channelVolume" value="1" step="0.1" min="0" max="1" required>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeChannelModal()">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    let currentUser = null;
+    let allChannels = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!await checkAuth()) {
+        window.location.href = 'login.html?redirect=admin.html';
+        return;
+      }
+
+      if (currentUser.role !== 'super_admin') {
+        document.getElementById('permissionDenied').style.display = 'block';
+        document.getElementById('adminContent').style.display = 'none';
+        return;
+      }
+
+      setupUserInfo();
+      setupTabs();
+      setupForms();
+      loadUsers();
+      loadChannels();
+      loadLogs();
+    });
+
+    async function checkAuth() {
+      const token = localStorage.getItem('auth_token');
+      const storedUser = API.getCurrentUser();
+
+      if (!token || !storedUser) {
+        return false;
+      }
+
+      try {
+        const result = await API.auth.me();
+        currentUser = result.user;
+        return true;
+      } catch (e) {
+        API.clearAuth();
+        return false;
+      }
+    }
+
+    function setupUserInfo() {
+      document.getElementById('userInfo').style.display = 'flex';
+      document.getElementById('userName').textContent = currentUser.name || currentUser.username;
+      document.getElementById('userRoleBadge').textContent = API.getRoleName(currentUser.role);
+      document.getElementById('userRoleBadge').className = `role-badge role-${currentUser.role}`;
+      document.getElementById('userAvatar').textContent = (currentUser.name || currentUser.username).charAt(0).toUpperCase();
+      document.getElementById('logoutBtn').addEventListener('click', logout);
+      document.getElementById('adminContent').style.display = 'block';
+    }
+
+    async function logout() {
+      if (confirm('确定要退出登录吗？')) {
+        try {
+          await API.auth.logout();
+        } catch (e) {}
+        API.clearAuth();
+        window.location.href = 'login.html';
+      }
+    }
+
+    function setupTabs() {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabId = btn.dataset.tab;
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(tabId).classList.add('active');
+
+          if (tabId === 'logs') loadLogs();
+        });
+      });
+    }
+
+    function setupForms() {
+      document.getElementById('userForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveUser();
+      });
+
+      document.getElementById('channelForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveChannel();
+      });
+    }
+
+    async function loadUsers() {
+      try {
+        const users = await API.users.list();
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = users.map(user => `
+          <tr>
+            <td><strong>${user.username}</strong></td>
+            <td>${user.name || '-'}</td>
+            <td><span class="role-badge role-${user.role}">${API.getRoleName(user.role)}</span></td>
+            <td>
+              <div class="channel-tags">
+                ${user.role === 'channel_admin' && user.managedChannels 
+                  ? user.managedChannels.map(c => `<span class="channel-tag">${c}</span>`).join('')
+                  : '-'}
+              </div>
+            </td>
+            <td>${new Date(user.createdAt).toLocaleString()}</td>
+            <td>
+              <button class="btn btn-secondary btn-sm" onclick="editUser('${user.username}')">编辑</button>
+              ${user.username !== currentUser.username 
+                ? `<button class="btn btn-danger btn-sm" onclick="deleteUser('${user.username}')">删除</button>`
+                : ''}
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        alert('加载用户列表失败: ' + e.message);
+      }
+    }
+
+    async function loadChannels() {
+      try {
+        allChannels = await API.channels.listAdmin();
+        const tbody = document.getElementById('channelsTableBody');
+        tbody.innerHTML = allChannels.map(ch => `
+          <tr>
+            <td><strong>${ch.id}</strong></td>
+            <td>${ch.name}</td>
+            <td>${ch.description || '-'}</td>
+            <td>${ch.isPlaying ? '<span style="color: #10b981;">播放中</span>' : '<span style="color: #6b7280;">已停止</span>'}</td>
+            <td>${ch.listeners}</td>
+            <td>${ch.playlistCount}</td>
+            <td>
+              <button class="btn btn-secondary btn-sm" onclick="editChannel('${ch.id}')">编辑</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteChannel('${ch.id}')">删除</button>
+            </td>
+          </tr>
+        `).join('');
+
+        const checkboxes = document.getElementById('managedChannelsCheckboxes');
+        checkboxes.innerHTML = allChannels.map(ch => `
+          <label class="checkbox-item">
+            <input type="checkbox" value="${ch.id}">
+            ${ch.name}
+          </label>
+        `).join('');
+      } catch (e) {
+        alert('加载频道列表失败: ' + e.message);
+      }
+    }
+
+    async function loadLogs() {
+      try {
+        const filters = {
+          type: document.getElementById('logTypeFilter').value,
+          username: document.getElementById('logUserFilter').value
+        };
+        const logs = await API.logs.list(filters);
+        const list = document.getElementById('logsList');
+        
+        if (logs.length === 0) {
+          list.innerHTML = '<div style="padding: 40px; text-align: center; color: #9ca3af;">暂无日志</div>';
+          return;
+        }
+
+        list.innerHTML = logs.map(log => `
+          <div class="log-item">
+            <span class="log-time">${new Date(log.timestamp).toLocaleString()}</span>
+            <span class="log-type log-type-${log.type}">${log.type}</span>
+            <span class="log-action">${log.action}</span>
+            ${log.user ? `<span style="color: #6b7280;">by ${log.user.username}</span>` : ''}
+            ${Object.keys(log.details || {}).length > 0 ? `<div class="log-details">${JSON.stringify(log.details)}</div>` : ''}
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('加载日志失败:', e);
+      }
+    }
+
+    async function clearLogs() {
+      if (confirm('确定要清空所有日志吗？此操作不可撤销。')) {
+        try {
+          await API.logs.clear();
+          loadLogs();
+        } catch (e) {
+          alert('清空日志失败: ' + e.message);
+        }
+      }
+    }
+
+    function openUserModal(user = null) {
+      document.getElementById('userModalTitle').textContent = user ? '编辑用户' : '新增用户';
+      document.getElementById('editUsername').value = user ? user.username : '';
+      document.getElementById('username').value = user ? user.username : '';
+      document.getElementById('username').disabled = !!user;
+      document.getElementById('name').value = user ? (user.name || '') : '';
+      document.getElementById('password').value = '';
+      document.getElementById('password').required = !user;
+      document.getElementById('role').value = user ? user.role : 'dj';
+      
+      document.querySelectorAll('#managedChannelsCheckboxes input').forEach(cb => {
+        cb.checked = user && user.managedChannels && user.managedChannels.includes(cb.value);
+      });
+      
+      toggleManagedChannels();
+      document.getElementById('userModal').classList.add('active');
+    }
+
+    function closeUserModal() {
+      document.getElementById('userModal').classList.remove('active');
+    }
+
+    function toggleManagedChannels() {
+      const role = document.getElementById('role').value;
+      document.getElementById('managedChannelsGroup').style.display = 
+        role === 'channel_admin' ? 'block' : 'none';
+    }
+
+    async function editUser(username) {
+      const users = await API.users.list();
+      const user = users.find(u => u.username === username);
+      if (user) {
+        openUserModal(user);
+      }
+    }
+
+    async function saveUser() {
+      const editUsername = document.getElementById('editUsername').value;
+      const userData = {
+        username: document.getElementById('username').value,
+        name: document.getElementById('name').value,
+        role: document.getElementById('role').value
+      };
+
+      const password = document.getElementById('password').value;
+      if (password) {
+        userData.password = password;
+      }
+
+      if (userData.role === 'channel_admin') {
+        userData.managedChannels = Array.from(
+          document.querySelectorAll('#managedChannelsCheckboxes input:checked')
+        ).map(cb => cb.value);
+      }
+
+      try {
+        if (editUsername) {
+          await API.users.update(editUsername, userData);
+        } else {
+          if (!password) {
+            alert('请输入密码');
+            return;
+          }
+          await API.users.create(userData);
+        }
+        closeUserModal();
+        loadUsers();
+      } catch (e) {
+        alert('保存用户失败: ' + e.message);
+      }
+    }
+
+    async function deleteUser(username) {
+      if (confirm(`确定要删除用户 "${username}" 吗？该用户的所有会话将被强制注销。`)) {
+        try {
+          const result = await API.users.delete(username);
+          alert(`删除成功，已注销 ${result.sessionsInvalidated} 个会话`);
+          loadUsers();
+        } catch (e) {
+          alert('删除用户失败: ' + e.message);
+        }
+      }
+    }
+
+    function openChannelModal(channel = null) {
+      document.getElementById('channelModalTitle').textContent = channel ? '编辑频道' : '新增频道';
+      document.getElementById('editChannelId').value = channel ? channel.id : '';
+      document.getElementById('channelId').value = channel ? channel.id : '';
+      document.getElementById('channelId').disabled = !!channel;
+      document.getElementById('channelName').value = channel ? channel.name : '';
+      document.getElementById('channelDescription').value = channel ? (channel.description || '') : '';
+      document.getElementById('channelDir').value = channel ? channel.dirName : '';
+      document.getElementById('channelBitrate').value = channel ? channel.bitrate : '128k';
+      document.getElementById('channelSampleRate').value = channel ? channel.sampleRate : 44100;
+      document.getElementById('channelVolume').value = channel ? channel.volume : 1;
+      
+      document.getElementById('channelModal').classList.add('active');
+    }
+
+    function closeChannelModal() {
+      document.getElementById('channelModal').classList.remove('active');
+    }
+
+    async function editChannel(channelId) {
+      const channel = allChannels.find(c => c.id === channelId);
+      if (channel) {
+        openChannelModal(channel);
+      }
+    }
+
+    async function saveChannel() {
+      const editId = document.getElementById('editChannelId').value;
+      const channelData = {
+        id: document.getElementById('channelId').value,
+        name: document.getElementById('channelName').value,
+        description: document.getElementById('channelDescription').value,
+        dir: document.getElementById('channelDir').value,
+        bitrate: document.getElementById('channelBitrate').value,
+        sampleRate: parseInt(document.getElementById('channelSampleRate').value),
+        volume: parseFloat(document.getElementById('channelVolume').value)
+      };
+
+      try {
+        if (editId) {
+          await API.channels.update(editId, channelData);
+        } else {
+          await API.channels.create(channelData);
+        }
+        closeChannelModal();
+        loadChannels();
+      } catch (e) {
+        alert('保存频道失败: ' + e.message);
+      }
+    }
+
+    async function deleteChannel(channelId) {
+      if (confirm(`确定要删除频道 "${channelId}" 吗？此操作不可撤销。`)) {
+        try {
+          await API.channels.delete(channelId);
+          loadChannels();
+        } catch (e) {
+          alert('删除频道失败: ' + e.message);
+        }
+      }
+    }
+  </script>
+</body>
+</html>

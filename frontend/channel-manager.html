@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>频道管理 - DJ 控制台</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .channel-manager-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .channel-selector {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .channel-select-btn {
+      padding: 12px 24px;
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .channel-select-btn:hover {
+      border-color: #667eea;
+    }
+
+    .channel-select-btn.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: transparent;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .tab-btn {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      color: #6b7280;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: #374151;
+    }
+
+    .tab-btn.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+      font-weight: 600;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .manager-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+      font-size: 13px;
+    }
+
+    tr:hover {
+      background: #f9fafb;
+    }
+
+    .drag-handle {
+      cursor: grab;
+      color: #9ca3af;
+      user-select: none;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .playlist-item.dragging {
+      opacity: 0.5;
+    }
+
+    .playlist-item.drag-over {
+      border-top: 2px solid #667eea;
+    }
+
+    .playlist-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      transition: background 0.2s;
+    }
+
+    .playlist-item:hover {
+      background: #f9fafb;
+    }
+
+    .track-index {
+      width: 30px;
+      text-align: center;
+      color: #9ca3af;
+      font-weight: 600;
+    }
+
+    .track-info {
+      flex: 1;
+    }
+
+    .track-title {
+      font-weight: 500;
+      color: #111827;
+    }
+
+    .track-filename {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .status-active {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .status-blacklisted {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #9ca3af;
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .permission-denied {
+      text-align: center;
+      padding: 100px 20px;
+      color: #999;
+    }
+
+    .permission-denied .icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .no-channels {
+      text-align: center;
+      padding: 60px 20px;
+      color: #9ca3af;
+    }
+
+    .no-channels .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .user-details {
+      text-align: right;
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .role-super_admin {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .role-channel_admin {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+
+    .role-dj {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .logout-btn {
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+
+    .logout-btn:hover {
+      background: #fecaca;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>📋 频道管理</h1>
+      <nav>
+        <a href="index.html" class="nav-link">播放器</a>
+        <a href="dj.html" class="nav-link">DJ 控制台</a>
+        <a href="admin.html" class="nav-link admin-only" id="navAdmin">系统管理</a>
+        <a href="channel-manager.html" class="nav-link active">频道管理</a>
+      </nav>
+      <div class="user-info" id="userInfo" style="display: none;">
+        <div class="user-details">
+          <div class="user-name" id="userName">--</div>
+          <div class="user-role">
+            <span class="role-badge" id="userRoleBadge">--</span>
+          </div>
+        </div>
+        <div class="user-avatar" id="userAvatar">--</div>
+        <button class="logout-btn" id="logoutBtn">退出</button>
+      </div>
+    </header>
+
+    <div id="permissionDenied" class="permission-denied" style="display: none;">
+      <div class="icon">🚫</div>
+      <h2>权限不足</h2>
+      <p>您没有权限访问此页面</p>
+      <button onclick="window.location.href='dj.html'" class="btn btn-primary" style="margin-top: 20px;">返回控制台</button>
+    </div>
+
+    <div id="managerContent" style="display: none;">
+      <div class="channel-manager-container">
+        <div id="noChannels" class="no-channels" style="display: none;">
+          <div class="icon">📻</div>
+          <h3>暂无管理的频道</h3>
+          <p>您当前没有管理任何频道，请联系管理员分配</p>
+        </div>
+
+        <div id="channelSelector" class="channel-selector">
+        </div>
+
+        <div id="channelTabs" style="display: none;">
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="info">ℹ️ 频道信息</button>
+            <button class="tab-btn" data-tab="playlist">🎵 播放列表</button>
+            <button class="tab-btn" data-tab="blacklist">🚫 黑名单</button>
+          </div>
+
+          <div id="info" class="tab-content active">
+            <div class="manager-card">
+              <div class="card-header">
+                <h2>频道信息</h2>
+                <button class="btn btn-primary" onclick="saveChannelInfo()">保存更改</button>
+              </div>
+              <div class="form-group">
+                <label>频道名称</label>
+                <input type="text" id="channelName">
+              </div>
+              <div class="form-group">
+                <label>频道描述</label>
+                <textarea id="channelDescription" rows="3"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>比特率</label>
+                  <input type="text" id="channelBitrate">
+                </div>
+                <div class="form-group">
+                  <label>采样率</label>
+                  <input type="number" id="channelSampleRate">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>默认音量 (0-1)</label>
+                  <input type="number" id="channelVolume" step="0.1" min="0" max="1">
+                </div>
+                <div class="form-group">
+                  <label>播放模式</label>
+                  <select id="channelMode">
+                    <option value="sequential">顺序播放</option>
+                    <option value="random">随机播放</option>
+                    <option value="loop">单曲循环</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="playlist" class="tab-content">
+            <div class="manager-card">
+              <div class="card-header">
+                <h2>播放列表管理</h2>
+                <button class="btn btn-primary" onclick="savePlaylistOrder()">保存排序</button>
+              </div>
+              <p style="color: #6b7280; margin-bottom: 16px;">拖拽歌曲调整播放顺序</p>
+              <div id="playlistList">
+              </div>
+            </div>
+          </div>
+
+          <div id="blacklist" class="tab-content">
+            <div class="manager-card">
+              <div class="card-header">
+                <h2>黑名单管理</h2>
+              </div>
+              <p style="color: #6b7280; margin-bottom: 16px;">黑名单中的歌曲将不会出现在播放列表中</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>歌曲名称</th>
+                    <th>文件名</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="filesTableBody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    let currentUser = null;
+    let managedChannels = [];
+    let currentChannelId = null;
+    let currentPlaylist = [];
+    let dragIndex = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!await checkAuth()) {
+        window.location.href = 'login.html?redirect=channel-manager.html';
+        return;
+      }
+
+      if (currentUser.role !== 'super_admin' && currentUser.role !== 'channel_admin') {
+        document.getElementById('permissionDenied').style.display = 'block';
+        document.getElementById('managerContent').style.display = 'none';
+        return;
+      }
+
+      setupUserInfo();
+      setupTabs();
+      await loadManagedChannels();
+    });
+
+    async function checkAuth() {
+      const token = localStorage.getItem('auth_token');
+      const storedUser = API.getCurrentUser();
+
+      if (!token || !storedUser) {
+        return false;
+      }
+
+      try {
+        const result = await API.auth.me();
+        currentUser = result.user;
+        return true;
+      } catch (e) {
+        API.clearAuth();
+        return false;
+      }
+    }
+
+    function setupUserInfo() {
+      document.getElementById('userInfo').style.display = 'flex';
+      document.getElementById('userName').textContent = currentUser.name || currentUser.username;
+      document.getElementById('userRoleBadge').textContent = API.getRoleName(currentUser.role);
+      document.getElementById('userRoleBadge').className = `role-badge role-${currentUser.role}`;
+      document.getElementById('userAvatar').textContent = (currentUser.name || currentUser.username).charAt(0).toUpperCase();
+      document.getElementById('logoutBtn').addEventListener('click', logout);
+      
+      if (currentUser.role === 'super_admin') {
+        document.getElementById('navAdmin').style.display = 'inline-block';
+      }
+      
+      document.getElementById('managerContent').style.display = 'block';
+    }
+
+    async function logout() {
+      if (confirm('确定要退出登录吗？')) {
+        try {
+          await API.auth.logout();
+        } catch (e) {}
+        API.clearAuth();
+        window.location.href = 'login.html';
+      }
+    }
+
+    function setupTabs() {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabId = btn.dataset.tab;
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(tabId).classList.add('active');
+
+          if (tabId === 'playlist') loadPlaylist();
+          if (tabId === 'blacklist') loadFiles();
+        });
+      });
+    }
+
+    async function loadManagedChannels() {
+      try {
+        managedChannels = await API.channels.listAdmin();
+        
+        if (managedChannels.length === 0) {
+          document.getElementById('noChannels').style.display = 'block';
+          document.getElementById('channelTabs').style.display = 'none';
+          return;
+        }
+
+        document.getElementById('noChannels').style.display = 'none';
+        document.getElementById('channelTabs').style.display = 'block';
+
+        const selector = document.getElementById('channelSelector');
+        selector.innerHTML = managedChannels.map(ch => `
+          <button class="channel-select-btn" data-id="${ch.id}">
+            ${ch.name}
+          </button>
+        `).join('');
+
+        selector.querySelectorAll('.channel-select-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const channelId = btn.dataset.id;
+            selectChannel(channelId);
+          });
+        });
+
+        if (managedChannels.length > 0) {
+          selectChannel(managedChannels[0].id);
+        }
+      } catch (e) {
+        alert('加载频道列表失败: ' + e.message);
+      }
+    }
+
+    function selectChannel(channelId) {
+      currentChannelId = channelId;
+
+      document.querySelectorAll('.channel-select-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.id === channelId);
+      });
+
+      loadChannelInfo();
+      
+      const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+      if (activeTab === 'playlist') loadPlaylist();
+      if (activeTab === 'blacklist') loadFiles();
+    }
+
+    function loadChannelInfo() {
+      const channel = managedChannels.find(c => c.id === currentChannelId);
+      if (!channel) return;
+
+      document.getElementById('channelName').value = channel.name;
+      document.getElementById('channelDescription').value = channel.description || '';
+      document.getElementById('channelBitrate').value = channel.bitrate;
+      document.getElementById('channelSampleRate').value = channel.sampleRate;
+      document.getElementById('channelVolume').value = channel.volume;
+      document.getElementById('channelMode').value = channel.mode || 'sequential';
+    }
+
+    async function saveChannelInfo() {
+      if (!currentChannelId) return;
+
+      const updates = {
+        name: document.getElementById('channelName').value,
+        description: document.getElementById('channelDescription').value,
+        bitrate: document.getElementById('channelBitrate').value,
+        sampleRate: parseInt(document.getElementById('channelSampleRate').value),
+        volume: parseFloat(document.getElementById('channelVolume').value),
+        mode: document.getElementById('channelMode').value
+      };
+
+      try {
+        await API.channels.update(currentChannelId, updates);
+        alert('频道信息已保存');
+        await loadManagedChannels();
+        selectChannel(currentChannelId);
+      } catch (e) {
+        alert('保存失败: ' + e.message);
+      }
+    }
+
+    async function loadPlaylist() {
+      if (!currentChannelId) return;
+
+      try {
+        const playlist = await API.channels.getPlaylist(currentChannelId);
+        currentPlaylist = [...playlist];
+        renderPlaylist();
+      } catch (e) {
+        alert('加载播放列表失败: ' + e.message);
+      }
+    }
+
+    function renderPlaylist() {
+      const list = document.getElementById('playlistList');
+      
+      if (currentPlaylist.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">🎵</div>
+            <p>播放列表为空</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = currentPlaylist.map((track, index) => `
+        <div class="playlist-item" draggable="true" data-index="${index}">
+          <span class="drag-handle">⋮⋮</span>
+          <span class="track-index">${index + 1}</span>
+          <div class="track-info">
+            <div class="track-title">${track.title}</div>
+            <div class="track-filename">${track.filename}</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="removeTrack('${track.filename}')">删除</button>
+        </div>
+      `).join('');
+
+      list.querySelectorAll('.playlist-item').forEach(item => {
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+        item.addEventListener('dragover', handleDragOver);
+        item.addEventListener('drop', handleDrop);
+        item.addEventListener('dragleave', handleDragLeave);
+      });
+    }
+
+    function handleDragStart(e) {
+      dragIndex = parseInt(e.target.dataset.index);
+      e.target.classList.add('dragging');
+    }
+
+    function handleDragEnd(e) {
+      e.target.classList.remove('dragging');
+      document.querySelectorAll('.playlist-item').forEach(item => {
+        item.classList.remove('drag-over');
+      });
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+      
+      const dropIndex = parseInt(e.currentTarget.dataset.index);
+      
+      if (dragIndex !== null && dragIndex !== dropIndex) {
+        const item = currentPlaylist[dragIndex];
+        currentPlaylist.splice(dragIndex, 1);
+        currentPlaylist.splice(dropIndex, 0, item);
+        renderPlaylist();
+      }
+      
+      dragIndex = null;
+    }
+
+    async function savePlaylistOrder() {
+      if (!currentChannelId || currentPlaylist.length === 0) return;
+
+      const order = currentPlaylist.map(t => t.filename);
+
+      try {
+        await API.channels.reorderPlaylist(currentChannelId, order);
+        alert('播放顺序已保存');
+      } catch (e) {
+        alert('保存失败: ' + e.message);
+      }
+    }
+
+    async function removeTrack(filename) {
+      if (!confirm(`确定要从播放列表中删除 "${filename}" 吗？`)) return;
+
+      try {
+        await API.channels.removeFromPlaylist(currentChannelId, filename);
+        loadPlaylist();
+      } catch (e) {
+        alert('删除失败: ' + e.message);
+      }
+    }
+
+    async function loadFiles() {
+      if (!currentChannelId) return;
+
+      try {
+        const files = await API.channels.getFiles(currentChannelId);
+        const tbody = document.getElementById('filesTableBody');
+        
+        if (files.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4" style="text-align: center; padding: 40px; color: #9ca3af;">
+                暂无音频文件
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = files.map(file => `
+          <tr>
+            <td>${file.title}</td>
+            <td style="font-family: monospace; font-size: 12px;">${file.filename}</td>
+            <td>
+              ${file.isBlacklisted 
+                ? '<span class="status-badge status-blacklisted">已加入黑名单</span>'
+                : '<span class="status-badge status-active">播放列表中</span>'}
+            </td>
+            <td>
+              ${file.isBlacklisted
+                ? `<button class="btn btn-secondary btn-sm" onclick="removeFromBlacklist('${file.filename}')">移出黑名单</button>`
+                : `<button class="btn btn-danger btn-sm" onclick="addToBlacklist('${file.filename}')">加入黑名单</button>`}
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        alert('加载文件列表失败: ' + e.message);
+      }
+    }
+
+    async function addToBlacklist(filename) {
+      if (!confirm(`确定要将 "${filename}" 加入黑名单吗？该歌曲将不会出现在播放列表中。`)) return;
+
+      try {
+        await API.channels.addToBlacklist(currentChannelId, filename);
+        loadFiles();
+      } catch (e) {
+        alert('操作失败: ' + e.message);
+      }
+    }
+
+    async function removeFromBlacklist(filename) {
+      try {
+        await API.channels.removeFromBlacklist(currentChannelId, filename);
+        loadFiles();
+      } catch (e) {
+        alert('操作失败: ' + e.message);
+      }
+    }
+  </script>
+</body>
+</html>

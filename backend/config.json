@@ -2,6 +2,26 @@
   "port": 3000,
   "wsPort": 3001,
   "musicBaseDir": "./music",
+  "defaultUsers": [
+    {
+      "username": "admin",
+      "password": "admin123",
+      "role": "super_admin",
+      "name": "超级管理员"
+    },
+    {
+      "username": "channel_admin",
+      "password": "admin123",
+      "role": "channel_admin",
+      "name": "频道管理员"
+    },
+    {
+      "username": "dj",
+      "password": "dj123",
+      "role": "dj",
+      "name": "普通DJ"
+    }
+  ],
   "channels": [
     {
       "id": "pop",

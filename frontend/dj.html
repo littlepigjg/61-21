@@ -3,8 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>内网音频广播 - DJ 控制台</title>
+  <title>DJ 控制台</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .user-details {
+      text-align: right;
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .role-super_admin {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .role-channel_admin {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+
+    .role-dj {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .logout-btn {
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+
+    .logout-btn:hover {
+      background: #fecaca;
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 10px;
+      margin-left: 20px;
+    }
+
+    .nav-item {
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      color: #666;
+      font-size: 14px;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: #f3f4f6;
+      color: #333;
+    }
+
+    .nav-item.active {
+      background: #667eea;
+      color: white;
+    }
+
+    .nav-item.admin-only,
+    .nav-item.channel-admin-only {
+      display: none;
+    }
+
+    .permission-denied {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .permission-denied .icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -13,10 +128,34 @@
       <nav>
         <a href="index.html" class="nav-link">播放器</a>
         <a href="dj.html" class="nav-link active">DJ 控制台</a>
+        <div class="nav-menu" id="navMenu">
+          <a href="admin.html" class="nav-item admin-only" id="navAdmin">⚙️ 系统管理</a>
+          <a href="channel-manager.html" class="nav-item channel-admin-only" id="navChannelMgr">📋 频道管理</a>
+        </div>
       </nav>
+      <div class="user-info" id="userInfo" style="display: none;">
+        <div class="user-details">
+          <div class="user-name" id="userName">--</div>
+          <div class="user-role">
+            <span class="role-badge" id="userRoleBadge">--</span>
+          </div>
+        </div>
+        <div class="user-avatar" id="userAvatar">--</div>
+        <button class="logout-btn" id="logoutBtn">退出</button>
+      </div>
     </header>
 
-    <main class="main">
+    <div id="loginRequired" style="display: none; text-align: center; padding: 100px 20px;">
+      <div style="font-size: 64px; margin-bottom: 20px;">🔒</div>
+      <h2>请先登录</h2>
+      <p style="color: #666; margin: 20px 0;">您需要登录后才能使用 DJ 控制台</p>
+      <button onclick="window.location.href='login.html?redirect=dj.html'" 
+              style="padding: 12px 32px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
+        去登录
+      </button>
+    </div>
+
+    <main class="main" id="mainContent" style="display: none;">
       <section class="channels-section">
         <h2>选择频道</h2>
         <div class="channel-list" id="channelList">
@@ -72,6 +211,7 @@
   </div>
 
   <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/dj.js"></script>
 </body>
 </html>

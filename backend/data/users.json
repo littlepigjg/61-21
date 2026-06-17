@@ -1,0 +1,27 @@
+{
+  "version": 1781696208307,
+  "users": [
+    {
+      "username": "admin",
+      "passwordHash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      "role": "super_admin",
+      "name": "超级管理员",
+      "createdAt": 1781696208306
+    },
+    {
+      "username": "channel_admin",
+      "passwordHash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      "role": "channel_admin",
+      "name": "频道管理员",
+      "createdAt": 1781696208307,
+      "managedChannels": []
+    },
+    {
+      "username": "dj",
+      "passwordHash": "b481fe50e2d640f7c8eee6252edb57e3cfe867a46e30f42a4d61a473ab0fb00d",
+      "role": "dj",
+      "name": "普通DJ",
+      "createdAt": 1781696208307
+    }
+  ]
+}
